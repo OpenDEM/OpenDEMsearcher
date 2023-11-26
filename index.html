@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Only high resolution (<= 2 m) and middle resolution (2 - 30m) Digital Terrain Models (DTM) and Digital Surface Models (DSM) on a country or state scale are taken into acount with a free license in the sense of the Open Knowlege Network.">
+  <meta name="keywords" content="open data, elevation models, terrain models, surface models">
+  <meta name="author" content="contact@opendemdata.info">
+
+  <title>OpenDEM Searcher</title>
+  <style>
+    .helpimage {
+      right: 5px;
+      top: 5px;
+      background-color: unset !important;
+      text-align: left;
+      margin: 0 auto;
+
+    }
+
+    .help {
+      display: none;
+      z-index: 9999;
+      position: absolute;
+      background-color: white;
+      padding: 10px;
+      width: 590px;
+      height: 490px;
+      top: 10px;
+      left: 50px;
+      overflow: auto;
+      border: solid;
+    }
+
+    .inspect-layer {
+      font-weight: 700;
+      text-shadow: 0px 0px 30px white, 0px 0px 30px white, 0px 0px 30px white, 0px 0px 10px white, 0px 0px 10px white;
+    }
+
+    .inspect-layer-deactive {
+      display: none;
+      font-weight: 700;
+      text-shadow: 0px 0px 30px white, 0px 0px 30px white, 0px 0px 30px white, 0px 0px 10px white, 0px 0px 10px white;
+    }
+
+    /* Tabs */
+    ul.tab {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    ul.tab li {
+      float: left;
+      border: 1px solid #ccc;
+      background-color: #f1f1f1;
+    }
+
+    ul.tab li a {
+      display: inline-block;
+      color: black;
+      text-align: center;
+      padding: 14px 16px;
+      text-decoration: none;
+      transition: 0.3s;
+      font-size: 17px;
+    }
+
+    ul.tab li a:hover {
+      background-color: #aad3df;
+    }
+
+    ul.tab li a:focus,
+    .active {
+      background-color: #aad3df;
+    }
+
+    .tabcontent {
+      padding: 6px 12px;
+      border: 1px solid #ccc;
+      border-top: none;
+      position: absolute;
+      top: 50px;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    table,
+    th,
+    td {
+      border: 1px solid black;
+    }
+
+    ul.tab li a:focus,
+    .active {
+      background-color: #aad3df;
+    }
+
+    .ol-popup-bottom {
+      background-color: white;
+      -webkit-filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
+      filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid #cccccc;
+      bottom: -12px;
+      left: -50px;
+      min-width: 400px;
+      z-index: 99999;
+      position: relative;
+    }
+
+    .ol-popup-bottom:after,
+    .ol-popup-bottom:before {
+      top: -4%;
+      /*border: solid transparent;*/
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 5px solid white;
+      content: " ";
+      height: 0;
+      width: 0;
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .ol-popup-bottom:after {
+      border-top-color: white;
+      border-width: 10px;
+      left: 48px;
+      margin-left: -10px;
+    }
+
+    .ol-popup-bottom:before {
+      border-top-color: #cccccc;
+      border-width: 11px;
+      left: 48px;
+      margin-left: -11px;
+    }
+
+    .ol-popup {
+      position: absolute;
+      background-color: white;
+      -webkit-filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
+      filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid #cccccc;
+      bottom: 12px;
+      left: -50px;
+      min-width: 400px;
+      z-index: 99999;
+    }
+
+    .ol-popup:after,
+    .ol-popup:before {
+      top: 100%;
+      border: solid transparent;
+      content: " ";
+      height: 0;
+      width: 0;
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .ol-popup:after {
+      border-top-color: white;
+      border-width: 10px;
+      left: 48px;
+      margin-left: -10px;
+    }
+
+    .ol-popup:before {
+      border-top-color: #cccccc;
+      border-width: 11px;
+      left: 48px;
+      margin-left: -11px;
+    }
+
+
+    .ol-popup-closer {
+      text-decoration: none;
+      position: absolute;
+      top: 2px;
+      right: 8px;
+    }
+
+    .ol-popup-closer:after {
+      content: "✖";
+    }
+
+    #regionname {
+      position: absolute;
+      z-index: 9999999;
+      left: 50px;
+      top: 10px;
+      border: 10px solid white;
+      background-color: white;
+
+    }
+  </style>
+
+  <script>
+    function switchTabs(evt, tabId) {
+      tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+      if (tabId === 'tab1') {
+        document.getElementById('tab1').style.display = "block";
+        document.getElementById('tab2').style.display = "none";
+      } else {
+        document.getElementById('tab2').style.display = "block";
+        document.getElementById('tab1').style.display = "none";
+      }
+      evt.currentTarget.className += " active";
+    }
+  </script>
+
+</head>
+
+<body>
+  <div id="map"></div>
+  <div id="popup" class="ol-popup">
+    <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+    <div id="popup-content"></div>
+  </div>
+  <div id="help" class="help" style="display: none;">
+    <h1>Help for the Open DEM Searcher</h1>
+    <h4>Only high resolution (&lt;= 2 m) and middle resolution (2 - 30m) Digital Terrain Models (DTM) and Digital
+      Surface
+      Models (DSM) on a country or state scale are taken into acount with a free license in the sense of the <a
+        target="_blank" href="https://okfn.org/opendata/">Open Knowlege Network</a>.</h4>
+    <p>When you move the mouse over a region, the name is displayed in the upper left corner.</p>
+    <p>Switch between the high and middle resolution layers with the radio buttons at the bottom left corner.</p>
+    <p>Click in the map on a red marked regions to display the following information:</p>
+    <table>
+      <tbody>
+        <tr>
+          <td>Region: </td>
+          <td>Country or state (or other typical field administration unit of the sovereign state).</td>
+        </tr>
+        <tr>
+          <td>Distributor:</td>
+          <td>Distributor of the data with a link.</td>
+        </tr>
+        <tr>
+          <td>License: </td>
+          <td>License of the data with a link to the license or the distributors in case of a data collection. </td>
+        </tr>
+        <tr>
+          <td>Data type: </td>
+          <td>Type of the data like raster, vector (countour lines) or pointclouds. Sometimes more specific information
+            is provided like <a target="_blank"
+              href="https://www.asprs.org/committee-general/laser-las-file-format-exchange-activities.html">LAS</a>
+            data. </td>
+        </tr>
+        <tr>
+          <td>Resolution: </td>
+          <td>Resolution of the dataset specified in meters. For point clouds the points per m2 are specified.</td>
+        </tr>
+        <tr>
+          <td>Link DTM: </td>
+          <td>Link to the DTM dataset. </td>
+        </tr>
+        <tr>
+          <td>Link DSM: </td>
+          <td>Link to the DSM dataset. </td>
+        </tr>
+        <tr>
+          <td>Comment: </td>
+          <td>Comment </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>
+      Please report any broken links: contact(at)opendendata.info, Thanks!
+    </h4>
+
+    <p><b>Other sources, catalogues and lists for open high and middle resolution DEM data:</b>
+    <ul>
+      <li><a target="_blank" href="https://opentopography.org/" title="OpenTopography">OpenTopography</a>: Community
+        lidar
+        datastes</li>
+      <li><a target="_blank" href="https://en.wikipedia.org/wiki/National_lidar_dataset"
+          title="Wikipedia National Lidar Dataset">Wikipedia National Lidar Dataset</a></li>
+      <li><a target="_blank" href="https://en.wikipedia.org/wiki/National_Lidar_Dataset_(United_States)"
+          title="Wikipedia National Lidar Dataset (United States)">Wikipedia National Lidar Dataset (United States)</a>
+      </li>
+      <li><a target="_blank" href="https://hub.arcgis.com/search" title="ArcGIS OpenData Catalog">ArcGIS OpenData
+          Catalog</a></li>
+      <li><a target="_blank" href="https://github.com/openterrain/openterrain/wiki/Terrain-Data"
+          title="OpenTerrain List">OpenTerrain List</a></li>
+    </ul>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+
+</html>
